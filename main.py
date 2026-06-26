@@ -1,37 +1,26 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 from pydantic import BaseModel
 
 app = FastAPI()
 
-todos = []
-
-class Todo(BaseModel):
+class User(BaseModel):
     id: int
-    title: str | None = None
-    description: str
-    completed: bool
+    name: str
+    email: str
+    password: str
     
-@app.post("/todos")
-def create_todo(todo: Todo):
-    todos.append(todo)
-    return {"message": "Todo created successfully", "todo": todo}
+class UserResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+    
+@app.get("/users/{user_id}", response_model=UserResponse)
+def get_user(user_id: int):
+    mock_user = User(id=user_id, name="John Doe", email="kapil@gmail.com", password="securepassword")
+    return mock_user
 
-@app.get("/todos")
-def get_todos():
-    return {"todos": todos}
+@app.post("/create_user", status_code=status.HTTP_201_CREATED, response_model=UserResponse)
+def create_user(user: User):
+    return {"message": "User created successfully"}
 
-@app.put("/todos/{todo_id}")
-def update_todo(todo_id: int, updated_todo: Todo):
-    for index, todo in enumerate(todos):
-        if todo.id == todo_id:
-            todos[index] = updated_todo
-            return {"message": "Todo updated successfully", "todo": updated_todo}
-    return {"message": "Todo not found"}
 
-@app.delete("/todos/{todo_id}")
-def delete_todo(todo_id: int):
-    for index, todo in enumerate(todos):
-        if todo.id == todo_id:
-            deleted_todo = todos.pop(index)
-            return {"message": "Todo deleted successfully", "todo": deleted_todo}
-    return {"message": "Todo not found"}
